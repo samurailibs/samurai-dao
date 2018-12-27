@@ -6,8 +6,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -36,10 +38,10 @@ public class TableMetaData {
 	private String catalog;
 
 	private CaseInsensitiveMap<ColumnMetaData> columnMetaData = new CaseInsensitiveMap<>();
-	private List<String> columnNames = new ArrayList<>();
+	private Set<String> columnNames = new LinkedHashSet<>();
 
 	private CaseInsensitiveMap<ColumnMetaData> pkColumnMetaData = new CaseInsensitiveMap<>();
-	private List<String> pkColumnNames = new ArrayList<>();
+	private Set<String> pkColumnNames = new LinkedHashSet<>();
 
 	public TableMetaData(Connection connection, String tableName) {
 		init(connection, tableName);
@@ -200,11 +202,11 @@ public class TableMetaData {
 	}
 
 	public List<String> getColumnNames() {
-		return columnNames;
+		return new ArrayList<>(columnNames);
 	}
 
 	public List<String> getPkColumnNames() {
-		return pkColumnNames;
+		return new ArrayList<>(pkColumnNames);
 	}
 
 	public ColumnMetaData getColumnMetaData(String columnName) {
