@@ -6,10 +6,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -38,10 +36,10 @@ public class TableMetaData {
 	private String catalog;
 
 	private CaseInsensitiveMap<ColumnMetaData> columnMetaData = new CaseInsensitiveMap<>();
-	private Set<String> columnNames = new LinkedHashSet<>();
+	private List<String> columnNames = new ArrayList<>();
 
 	private CaseInsensitiveMap<ColumnMetaData> pkColumnMetaData = new CaseInsensitiveMap<>();
-	private Set<String> pkColumnNames = new LinkedHashSet<>();
+	private List<String> pkColumnNames = new ArrayList<>();
 
 	public TableMetaData(Connection connection, String tableName) {
 		init(connection, tableName);
@@ -60,13 +58,14 @@ public class TableMetaData {
 	private void init(Connection connection, String tableName) {
 		try {
 			Dialect dialect = DialectManager.getDialect(connection);
+			this.schema = dialect.getSchema(connection);
+			this.catalog = connection.getCatalog();
 			this.tableName = dialect.getTableNameResolver().resolve(connection, tableName);
 			DatabaseMetaData metaData = connection.getMetaData();
 
 			setUpColumnMetaData(connection, metaData, this.tableName, dialect);
 			setUpPks(metaData, this.tableName);
-			setUpFKs(connection, metaData);
-		} catch (SQLException e) {
+        } catch (SQLException e) {
 			throw new SQLError(e);
 		}
 	}
@@ -77,8 +76,8 @@ public class TableMetaData {
 
 	private void setUpPks(DatabaseMetaData metaData, String tableName, List<String> triedTableName) {
 		triedTableName.add(tableName);
-		String catalog = null;
-		String schemaPattern = null;
+		String catalog = this.catalog;
+		String schemaPattern = this.schema;
 		try (ResultSet primaryKeys = metaData.getPrimaryKeys(catalog, schemaPattern, tableName)) {
 			while (primaryKeys.next()) {
 				String columnName = primaryKeys.getString(4);
@@ -102,8 +101,8 @@ public class TableMetaData {
 	}
 
 	private void setUpColumnMetaData(Connection connection, DatabaseMetaData metaData, String tableName, Dialect dialect) {
-		String catalog = null;
-		String schemaPattern = null;
+		String catalog = this.catalog;
+		String schemaPattern = this.schema;
 		String tableNamePattern = tableName;
 		String columnNamePattern = null;
 		try (ResultSet columns = metaData.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);){
@@ -111,14 +110,8 @@ public class TableMetaData {
 			while (columns.next()) {
 				ColumnMetaData columnMetaData = new ColumnMetaData();
 				String tableCatalog = columns.getString(1);
-				if (this.catalog != null) {
-					this.catalog = tableCatalog;
-				}
 				columnMetaData.setTableCat(tableCatalog);
 				String schema = columns.getString(2);
-				if (this.schema != null) {
-					this.schema = schema;
-				}
 				columnMetaData.setTableSchem(schema);
 				columnMetaData.setTableName(columns.getString(3));
 				columnMetaData.setColumnName(columns.getString(4));
@@ -152,41 +145,11 @@ public class TableMetaData {
 			}
 			if (columnMetaData.isEmpty() == true && tableName.equals(tableName.toUpperCase()) == false) {
 				this.tableName = tableName.toUpperCase();
-				setUpColumnMetaData(connection, metaData, tableName.toUpperCase(), dialect);
+                setUpColumnMetaData(connection, metaData, tableName.toUpperCase(), dialect);
 			}
 		} catch (SQLException e) {
 			throw new SQLError(e);
 		}
-	}
-
-	protected List<ForeignKey> importedKeys = new ArrayList<>();
-
-	public List<ForeignKey> getImportedKeys() {
-		return importedKeys;
-	}
-
-	private void setUpFKs(Connection connection, DatabaseMetaData metaData) throws SQLException {
-		String schemaPattern = null;
-		try (ResultSet rs = metaData.getImportedKeys(connection.getCatalog(), schemaPattern, tableName)) {
-			while (rs.next()) {
-				String pkTableName = rs.getString("PKTABLE_NAME");
-				String pkColumnName = rs.getString("PKCOLUMN_NAME");
-				String fkTableName = rs.getString("FKTABLE_NAME");
-				String fkColumnName = rs.getString("FKCOLUMN_NAME");
-				short keySeq = rs.getShort("KEY_SEQ");
-				ForeignKey importedKey = getImportedKey(keySeq);
-				importedKey.add(fkTableName, fkColumnName, pkTableName, pkColumnName);
-			}
-		}
-	}
-
-	private ForeignKey getImportedKey(short keySeq) {
-		if (keySeq == 1) {
-			ForeignKey importedKey = new ForeignKey();
-			importedKeys.add(importedKey);
-			return importedKey;
-		}
-		return importedKeys.get(importedKeys.size() - 1);
 	}
 
 	public String getTableName() {

@@ -34,14 +34,6 @@ public class TableMetaDataTest {
 		assertNotNull(columnMetaData);
 		ColumnMetaData pk = data.getColumnMetaData("EMPNO");
 		assertTrue(pk.isPrimaryKey());
-
-		List<ForeignKey> importedKeys = data.getImportedKeys();
-		assertEquals(1, importedKeys.size());
-		ForeignKey foreignKey = importedKeys.get(0);
-		ForeignKeyColumn column = foreignKey.get(0);
-		assertEqualsIgnoreCase(column.getTableName(), "EMP", column.getTableName());
-		assertEquals("DEPTNO", column.getColumnName());
-		assertEqualsIgnoreCase("DEPTNO", column.getReference().getColumn());
 	}
 
 	private DataSource getDataSource() {
