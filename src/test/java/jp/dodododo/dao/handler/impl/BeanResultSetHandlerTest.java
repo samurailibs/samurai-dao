@@ -5,10 +5,13 @@ import static org.junit.Assert.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import jp.dodododo.dao.annotation.Bean;
 import jp.dodododo.dao.annotation.Column;
 import jp.dodododo.dao.columns.ResultSetColumn;
+import jp.dodododo.dao.exception.InstantiationRuntimeException;
 import jp.dodododo.dao.util.ClassUtil;
 import jp.dodododo.dao.util.Sun14ReflectionUtil;
 
@@ -53,6 +56,35 @@ public class BeanResultSetHandlerTest {
 		assertFalse(BeanResultSetHandler.contains(resultSetColumnList, "C"));
 	}
 
+	@Test
+	public void testInterface() {
+		try {
+			new BeanResultSetHandler(null, Interface.class, null, null, null);
+		} catch (InstantiationRuntimeException e) {
+			assertEquals("This class is invalid, because jp.dodododo.dao.handler.impl.BeanResultSetHandlerTest$Interface is interface.", e.getMessage());
+		}
+	}
+
+	@Test
+	public void testAbstract() {
+		try {
+			new BeanResultSetHandler(null, AbstractClass.class, null, null, null);
+		} catch (InstantiationRuntimeException e) {
+			assertEquals("This class is invalid, because jp.dodododo.dao.handler.impl.BeanResultSetHandlerTest$AbstractClass is abstract.", e.getMessage());
+		}
+	}
+
+	@Test
+	public void testAbstractClassHaveFactoryMethod() throws Exception {
+		try {
+			BeanResultSetHandler handler = new BeanResultSetHandler(null, AbstractClassHaveFactoryMethod.class, new HashMap<>(), null, null);
+			Object row = handler.createRow(null, new ArrayList<>());
+			assertTrue(row instanceof AbstractClassHaveFactoryMethod);
+		} catch (InstantiationRuntimeException e) {
+			fail(e.getMessage());
+		}
+	}
+
 	public static class Target {
 		public Target() {
 		}
@@ -70,6 +102,20 @@ public class BeanResultSetHandlerTest {
 	public static class Target2 {
 		private Target2(int i) {
 			throw new RuntimeException();
+		}
+	}
+
+	public interface Interface {
+	}
+
+	public static abstract class AbstractClass {
+	}
+
+	@Bean(createMethod = "@jp.dodododo.dao.handler.impl.BeanResultSetHandlerTest$AbstractClassHaveFactoryMethod@create()")
+	public static abstract class AbstractClassHaveFactoryMethod {
+		static AbstractClassHaveFactoryMethod create() {
+			return new AbstractClassHaveFactoryMethod() {
+			};
 		}
 	}
 }

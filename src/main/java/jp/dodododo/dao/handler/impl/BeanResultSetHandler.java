@@ -31,6 +31,7 @@ import jp.dodododo.dao.annotation.Compress;
 import jp.dodododo.dao.annotation.Zone;
 import jp.dodododo.dao.columns.ResultSetColumn;
 import jp.dodododo.dao.commons.Null;
+import jp.dodododo.dao.exception.InstantiationRuntimeException;
 import jp.dodododo.dao.exception.NoParameterizedException;
 import jp.dodododo.dao.impl.EmptyIterationCallback;
 import jp.dodododo.dao.lazyloading.LazyLoadingUtil;
@@ -88,11 +89,25 @@ public class BeanResultSetHandler<T> extends AbstractResultSetHandler<T> {
 
 	protected BeanResultSetHandler(IterationCallback<T> callback, Class<T> beanClass, String createMethod, boolean nullable, Map<String, Object> arg, Connection  connection) {
 		super(callback);
+		if (isEmpty(createMethod)) {
+			this.createMethod = getCreateMethod(beanClass);
+		} else {
+			this.createMethod = createMethod;
+		}
+		if (isEmpty(createMethod) == true) {
+			validateBeanClass(beanClass);
+		}
 		this.beanClass = beanClass;
-		this.createMethod = createMethod;
 		this.nullable = nullable;
 		this.arg = arg;
 		this.connection= connection;
+	}
+
+	protected void validateBeanClass(Class<?> clazz) {
+		int modifiers = clazz.getModifiers();
+		if (Modifier.isAbstract(modifiers) || Modifier.isInterface(modifiers)) {
+			throw new InstantiationRuntimeException(clazz);
+		}
 	}
 
 	private static <T> String getCreateMethod(Class<T> beanClass) {
