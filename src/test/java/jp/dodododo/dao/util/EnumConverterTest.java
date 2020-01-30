@@ -14,19 +14,13 @@ public class EnumConverterTest extends TestCase {
 		assertSame(ElementType.TYPE_USE, result4);
 
 		try {
-			EnumConverter.convert(10, ElementType.class);
+			EnumConverter.convert(100, ElementType.class);
 			fail();
 		} catch (IllegalArgumentException success) {
 		}
 
 		ElementType result5 = EnumConverter.convert("LOCAL_VARIABLE", ElementType.class);
 		assertSame(ElementType.LOCAL_VARIABLE, result5);
-
-		try {
-			EnumConverter.convert(10, ElementType.class);
-			fail();
-		} catch (IllegalArgumentException success) {
-		}
 
 		StringEnum result6 = EnumConverter.convert("cc", StringEnum.class);
 		assertSame(StringEnum.C, result6);

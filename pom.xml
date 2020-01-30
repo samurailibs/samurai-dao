@@ -8,7 +8,7 @@
   <artifactId>samurai-dao</artifactId>
   <packaging>jar</packaging>
   <name>dao</name>
-  <version>1.2.0-RC10</version>
+  <version>1.2.0</version>
 <!--
   <version>1.2.0-RC5</version>
   <version>1.2.0</version>
@@ -16,7 +16,7 @@
 -->
   <description>samurai-dao is a simple, high performance object/relational persistence and query service.</description>
   <url>https://github.com/samurailibs/samurai-dao/</url>
-  <inceptionYear>2008-2018</inceptionYear>
+  <inceptionYear>2008-2019</inceptionYear>
 
   <licenses>
     <license>
@@ -297,7 +297,7 @@
     <dependency>
       <groupId>jp.dodododo</groupId>
       <artifactId>samurai-dao-dialect-mysql-8</artifactId>
-      <version>1.2.0-RC1</version>
+      <version>1.2.0</version>
       <type>jar</type>
       <scope>test</scope>
     </dependency>
